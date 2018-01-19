@@ -2,6 +2,7 @@ from PIL import Image
 import argparse
 
 from os.path import realpath, join, split, splitext
+from sys import stderr
 
 
 def get_new_size_by_one_side(size_format, width, height):
@@ -31,12 +32,17 @@ def get_new_size(origin, scale, width, height):
         elif width or height:
             return get_new_size_by_one_side(size_format, width, height)
         else:
-            exit("Увеличение и размеры не заданы")
+            print("Ошибка: Увеличение и размеры не заданы", file=stderr)
     else:
         if width or height:
-            exit("Запрещено задавать увеличение вместе с размерами")
+            print(
+                "Ошибка: Запрещено задавать увеличение вместе с размерами",
+                file=stderr
+            )
 
         return scale_size(scale, origin.size)
+
+    return None
 
 
 def get_result_filename(origin, new_size):
@@ -61,9 +67,14 @@ def resize_image(original_path, result_path, new_size):
         image.thumbnail(new_size)
         image.save(result_path)
     except IOError:
-        exit("Не удалось изменить размер файла {}".format(original_path))
+        print(
+            "Не удалось изменить размер файла {}".format(original_path),
+            file=stderr
+        )
+        return False
     else:
         print("Готово:\n{}".format(result_path))
+        return True
 
 
 if __name__ == '__main__':
@@ -121,9 +132,13 @@ if __name__ == '__main__':
 
     new_size = get_new_size(origin, args.scale, args.width, args.height)
 
+    if new_size is None:
+        exit(1)
+
     if args.result:
         result_path = realpath(args.result)
     else:
         result_path = get_result_filename(args.origin, new_size)
 
-    resize_image(args.origin, result_path, new_size)
+    if not resize_image(args.origin, result_path, new_size):
+        exit(1)
