@@ -5,6 +5,25 @@ from os.path import realpath, join, split, splitext
 from sys import stderr
 
 
+def get_original_image(image_path):
+    try:
+        origin = Image.open(image_path)
+    except IOError:
+        print(
+            "Не найдено исходное изображение или файл не является "
+            "изображением",
+            file=stderr
+        )
+        return None
+    print(
+        "Исходный файл:",
+        realpath(image_path),
+        origin.format,
+        "{}x{}".format(origin.size[width], origin.size[height])
+    )
+    return origin
+
+
 def get_new_size_by_one_side(size_format, width, height):
     if width:
         height = round(width / size_format)
@@ -117,18 +136,9 @@ if __name__ == '__main__':
     width, height = 0, 1
     args = parser.parse_args()
 
-    try:
-        origin = Image.open(args.origin)
-    except IOError:
-        exit(
-            "Не найдено исходное изображение или файл не является изображением"
-        )
-    print(
-        "Исходный файл:",
-        realpath(args.origin),
-        origin.format,
-        "{}x{}".format(origin.size[width], origin.size[height])
-    )
+    origin = get_original_image(args.origin)
+    if origin is None:
+        exit(1)
 
     new_size = get_new_size(origin, args.scale, args.width, args.height)
 
