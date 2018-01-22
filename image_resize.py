@@ -88,7 +88,10 @@ def get_new_size(origin_size, scale, width, height):
         return scale_size(scale, origin_size)
 
 
-def get_result_filename(origin_path, new_size):
+def get_result_filename(origin_path, new_size, result_file_name):
+    if result_file_name:
+        return result_file_name
+
     origin_dirpath, origin_filename = split(origin_path)
     origin_filename_root, origin_filename_ext = splitext(origin_filename)
     width_key, height_key = 0, 1
@@ -125,16 +128,6 @@ if __name__ == '__main__':
             'Не найдено исходное изображение или файл не является изображением'
         )
 
-    print(
-        'Исходный файл:',
-        args.origin,
-        original_file.format,
-        '{}x{}'.format(
-            original_file.size[width_key],
-            original_file.size[height_key]
-        )
-    )
-
     if args.scale != 1 and args.width and args.height:
         exit('Ошибка: Запрещено задавать увеличение вместе с размерами')
     elif args.scale == 1 and not (args.width or args.height):
@@ -147,10 +140,7 @@ if __name__ == '__main__':
         args.height
     )
 
-    if args.result:
-        result_file_path = args.result
-    else:
-        result_file_path = get_result_filename(args.origin, new_size)
+    result_file_path = get_result_filename(args.origin, new_size, args.result)
 
     if not resize_image(args.origin, result_file_path, new_size):
         exit('Не удалось изменить размер файла {}'.format(args.origin))
