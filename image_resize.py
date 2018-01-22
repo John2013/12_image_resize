@@ -64,7 +64,8 @@ def get_new_size_by_height(size_format, height):
 
 
 def scale_size(scale, size):
-    return round(size[0] * scale), round(size[1] * scale)
+    width_key, height_key = 0, 1
+    return round(size[width_key] * scale), round(size[height_key] * scale)
 
 
 def get_new_size(origin_size, scale, width, height):
@@ -84,7 +85,7 @@ def get_new_size(origin_size, scale, width, height):
     elif width or height:
         return None
     else:
-        return scale_size(scale, origin_size.size)
+        return scale_size(scale, origin_size)
 
 
 def get_result_filename(origin_path, new_size):
