@@ -15,23 +15,25 @@ Remember, it is recommended to use [virtualenv/venv](https://devman.org/encyclop
 # How to use
 
 ```bash
-usage: image_resize.py [-h] [--origin ORIGIN] [--height HEIGHT]
-                       [--width WIDTH] [--scale SCALE] [--result RESULT]
+usage: image_resize.py [-h] --origin ORIGIN [--height HEIGHT] [--width WIDTH]
+                       [--scale SCALE] [--result RESULT]
 
 Сжатие изображения.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --origin ORIGIN, -o ORIGIN
-                        path to original image (default:origin.jpg)
+  --height HEIGHT, -e HEIGHT
+                        Ширина результирующего изображения
   --width WIDTH, -w WIDTH
-                        width of result image in px
-  --height HEIGHT, -he HEIGHT
-                        height of result image ix px
+                        Высота результирующего изображения
   --scale SCALE, -s SCALE
-                        scale multiplier (default:1)
+                        Множитель размера изображения
   --result RESULT, -r RESULT
-                        path to result image (default: None)
+                        Путь к изображению результату
+
+Обязательные аргументы:
+  --origin ORIGIN, -o ORIGIN
+                        Путь к исходному изображению
 ```
 
 Example:
