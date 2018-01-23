@@ -18,7 +18,7 @@ def parse_args():
     )
     parser.add_argument(
         '--height',
-        '-e',
+        '-H',
         type=int,
         default=None,
         help='Ширина результирующего изображения'
@@ -63,14 +63,17 @@ def get_new_size_by_height(size_format, height):
     return round(height * size_format), height
 
 
-def scale_size(scale, size):
-    width, height = size
+def scale_size(scale, original_image_size):
+    width, height = original_image_size
     return round(width * scale), round(height * scale)
 
 
-def get_new_size(origin_size, width, height):
-    origin_width, origin_height = origin_size
+def get_new_size(original_image_size, width, height, scale):
+    origin_width, origin_height = original_image_size
     size_format = origin_width / origin_height
+
+    if scale != 1:
+        return scale_size(scale, original_image_size)
 
     if width and height:
         print('Пропорции изображения могут быть искажены')
@@ -80,6 +83,13 @@ def get_new_size(origin_size, width, height):
     elif height:
         return get_new_size_by_height(size_format, height)
     else:
+        return None
+
+
+def resize_image(original_image, new_size):
+    try:
+        return original_image.resize(new_size)
+    except IOError:
         return None
 
 
@@ -95,18 +105,25 @@ def get_result_filename(origin_path, new_size):
     )
 
 
-def resize_image(original_image, result_path, new_size):
-    try:
-        original_image.resize(new_size)
-        original_image.save(result_path)
-    except IOError:
-        return False
+def save_image(resized_image, original_image_path, result_path):
+    if result_path:
+        result_image_path = result_path
     else:
-        return True
+        new_size = resized_image.size
+        result_image_path = get_result_filename(original_image_path, new_size)
+    resized_image.save(result_image_path, resized_image.format)
+    return result_image_path
+
 
 
 if __name__ == '__main__':
     args = parse_args()
+
+    if args.scale != 1 and (args.width or args.height):
+        exit('Ошибка: Запрещено задавать увеличение вместе с размерами')
+
+    if args.scale == 1 and not (args.width or args.height):
+        exit('Ошибка: Увеличение и размеры не заданы')
 
     original_image = get_original_image(args.origin)
     if original_image is None:
@@ -114,28 +131,18 @@ if __name__ == '__main__':
             'Не найдено исходное изображение или файл не является изображением'
         )
 
-    if args.scale != 1:
-        if args.width and args.height:
-            exit('Ошибка: Запрещено задавать увеличение вместе с размерами')
-        else:
-            new_size = scale_size(args.scale, original_image.size)
+    new_size = get_new_size(
+        original_image.size,
+        args.width,
+        args.height,
+        args.scale
+    )
 
-    else:
-        if not (args.width or args.height):
-            exit('Ошибка: Увеличение и размеры не заданы')
-        else:
-            new_size = get_new_size(
-                original_image.size,
-                args.width,
-                args.height
-            )
+    resized_image = resize_image(original_image, new_size)
 
-    if args.result:
-        result_image_path = args.result
-    else:
-        result_image_path = get_result_filename(args.origin, new_size)
-
-    if not resize_image(original_image, result_image_path, new_size):
+    if resized_image is None:
         exit('Не удалось изменить размер файла {}'.format(args.origin))
-    else:
-        print('Готово:\n{}'.format(result_image_path))
+
+    result_image_path = save_image(resized_image, args.origin, args.result)
+
+    print('Готово:\n{}'.format(result_image_path))

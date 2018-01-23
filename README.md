@@ -22,7 +22,7 @@ usage: image_resize.py [-h] --origin ORIGIN [--height HEIGHT] [--width WIDTH]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --height HEIGHT, -e HEIGHT
+  --height HEIGHT, -H HEIGHT
                         Ширина результирующего изображения
   --width WIDTH, -w WIDTH
                         Высота результирующего изображения
