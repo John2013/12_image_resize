@@ -115,7 +115,6 @@ def save_image(resized_image, original_image_path, result_path):
     return result_image_path
 
 
-
 if __name__ == '__main__':
     args = parse_args()
 
