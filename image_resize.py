@@ -49,10 +49,10 @@ def parse_args():
 
 def get_original_image(image_path):
     try:
-        original_file = Image.open(image_path)
+        original_image = Image.open(image_path)
     except IOError:
         return None
-    return original_file
+    return original_image
 
 
 def get_new_size_by_width(size_format, width):
@@ -64,54 +64,41 @@ def get_new_size_by_height(size_format, height):
 
 
 def scale_size(scale, size):
-    width_key, height_key = 0, 1
-    return round(size[width_key] * scale), round(size[height_key] * scale)
+    width, height = size
+    return round(width * scale), round(height * scale)
 
 
-def get_new_size(origin_size, scale, width, height):
-    width_key, height_key = 0, 1
-    size_format = origin_size[width_key] / origin_size[height_key]
+def get_new_size(origin_size, width, height):
+    origin_width, origin_height = origin_size
+    size_format = origin_width / origin_height
 
-    if scale == 1:
-        if width and height:
-            print('Пропорции изображения могут быть искажены')
-            return width, height
-        elif width:
-            return get_new_size_by_width(size_format, width)
-        elif height:
-            return get_new_size_by_height(size_format, height)
-        else:
-            return None
-    elif width or height:
-        return None
+    if width and height:
+        print('Пропорции изображения могут быть искажены')
+        return width, height
+    elif width:
+        return get_new_size_by_width(size_format, width)
+    elif height:
+        return get_new_size_by_height(size_format, height)
     else:
-        return scale_size(scale, origin_size)
+        return None
 
 
-def get_result_filename(origin_path, new_size, result_file_name):
-    if result_file_name:
-        return result_file_name
+def get_result_filename(origin_path, new_size):
+    origin_image_path, origin_image_ext = splitext(origin_path)
+    width, height = new_size
 
-    origin_dirpath, origin_filename = split(origin_path)
-    origin_filename_root, origin_filename_ext = splitext(origin_filename)
-    width_key, height_key = 0, 1
-
-    return join(
-        origin_dirpath,
-        '{name}__{width}x{height}{ext}'.format(
-            name=origin_filename_root,
-            width=new_size[width_key],
-            height=new_size[height_key],
-            ext=origin_filename_ext
-        )
+    return '{name}__{width}x{height}{ext}'.format(
+        name=origin_image_path,
+        width=width,
+        height=height,
+        ext=origin_image_ext
     )
 
 
-def resize_image(original_path, result_path, new_size):
+def resize_image(original_image, result_path, new_size):
     try:
-        image = Image.open(original_path)
-        image.thumbnail(new_size)
-        image.save(result_path)
+        original_image.resize(new_size)
+        original_image.save(result_path)
     except IOError:
         return False
     else:
@@ -120,29 +107,35 @@ def resize_image(original_path, result_path, new_size):
 
 if __name__ == '__main__':
     args = parse_args()
-    width_key, height_key = 0, 1
 
-    original_file = get_original_image(args.origin)
-    if original_file is None:
+    original_image = get_original_image(args.origin)
+    if original_image is None:
         exit(
             'Не найдено исходное изображение или файл не является изображением'
         )
 
-    if args.scale != 1 and args.width and args.height:
-        exit('Ошибка: Запрещено задавать увеличение вместе с размерами')
-    elif args.scale == 1 and not (args.width or args.height):
-        exit('Ошибка: Увеличение и размеры не заданы')
+    if args.scale != 1:
+        if args.width and args.height:
+            exit('Ошибка: Запрещено задавать увеличение вместе с размерами')
+        else:
+            new_size = scale_size(args.scale, original_image.size)
 
-    new_size = get_new_size(
-        original_file.size,
-        args.scale,
-        args.width,
-        args.height
-    )
+    else:
+        if not (args.width or args.height):
+            exit('Ошибка: Увеличение и размеры не заданы')
+        else:
+            new_size = get_new_size(
+                original_image.size,
+                args.width,
+                args.height
+            )
 
-    result_file_path = get_result_filename(args.origin, new_size, args.result)
+    if args.result:
+        result_image_path = args.result
+    else:
+        result_image_path = get_result_filename(args.origin, new_size)
 
-    if not resize_image(args.origin, result_file_path, new_size):
+    if not resize_image(original_image, result_image_path, new_size):
         exit('Не удалось изменить размер файла {}'.format(args.origin))
     else:
-        print('Готово:\n{}'.format(result_file_path))
+        print('Готово:\n{}'.format(result_image_path))
