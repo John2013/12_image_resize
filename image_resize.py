@@ -1,15 +1,12 @@
 from PIL import Image
-import argparse
+from argparse import ArgumentParser
 
-from os.path import join, split, splitext
+from os.path import splitext
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Сжатие изображения.'
-    )
-    required_paramss = parser.add_argument_group('Обязательные аргументы')
-    required_paramss.add_argument(
+    parser = ArgumentParser(description='Сжатие изображения.')
+    parser.add_argument(
         '--origin',
         '-o',
         type=str,
@@ -49,10 +46,9 @@ def parse_args():
 
 def get_original_image(image_path):
     try:
-        original_image = Image.open(image_path)
+        return Image.open(image_path)
     except IOError:
         return None
-    return original_image
 
 
 def get_new_size_by_width(size_format, width):
@@ -80,17 +76,12 @@ def get_new_size(original_image_size, width, height, scale):
         return width, height
     elif width:
         return get_new_size_by_width(size_format, width)
-    elif height:
-        return get_new_size_by_height(size_format, height)
     else:
-        return None
+        return get_new_size_by_height(size_format, height)
 
 
 def resize_image(original_image, new_size):
-    try:
-        return original_image.resize(new_size)
-    except IOError:
-        return None
+    return original_image.resize(new_size)
 
 
 def get_result_filename(origin_path, new_size):
@@ -138,9 +129,6 @@ if __name__ == '__main__':
     )
 
     resized_image = resize_image(original_image, new_size)
-
-    if resized_image is None:
-        exit('Не удалось изменить размер файла {}'.format(args.origin))
 
     result_image_path = save_image(resized_image, args.origin, args.result)
 
